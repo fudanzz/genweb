@@ -1,0 +1,42 @@
+{
+  "name": "@generative-ai-web-apps/core",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Code Repository for the Generative AI Web Apps book",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Theo Despoudis",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/Generative-AI-Web-Apps/Code.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Generative-AI-Web-Apps/Code/issues"
+  },
+  "homepage": "https://github.com/Generative-AI-Web-Apps/Code#readme",
+  "workspaces": [
+    "ch02/*",
+    "ch03/*",
+    "ch04/*",
+    "ch06/*",
+    "ch07/*",
+    "ch08/*",
+    "ch09/*",
+    "ch10/*",
+    "ch11/*",
+    "ch12/*",
+    "starter-project/*"
+  ],
+  "dependencies": {
+    "@langchain/google-genai": "^0.2.18",
+    "@langchain/langgraph": "^0.4.9",
+    "@langchain/mcp-adapters": "^0.6.0",
+    "@modelcontextprotocol/sdk": "^1.18.0",
+    "hnswlib-node": "^3.0.0",
+    "zod": "^3.25.76"
+  }
+}
