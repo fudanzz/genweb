@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Chat Streaming (ch03)
 
-## Getting Started
+A real-time AI chat application demonstrating streaming responses with multi-provider LLM support.
 
-First, run the development server:
+## Architecture
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+src/
+├── app/
+│   ├── (chat)/
+│   │   ├── page.js          # Chat UI — provider/model selector, message input
+│   │   ├── layout.js        # Chat route layout
+│   │   └── api/
+│   │       ├── route.js     # POST /api — streams LLM response via Vercel AI SDK
+│   │       └── utils.js     # Provider factory (OpenAI / Gemini / Azure OpenAI)
+│   └── layout.js            # Root layout
+├── components/
+│   ├── chat/
+│   │   ├── ChatList.jsx     # Renders message history
+│   │   ├── ChatBubble.jsx   # Individual message bubble
+│   │   └── ChatBubbleLoading.jsx  # Streaming indicator
+│   ├── ui/                  # shadcn/ui primitives (button, card, textarea, etc.)
+│   ├── AutoScroll.jsx
+│   ├── Navbar.jsx
+│   └── Footer.jsx
+├── hooks/
+│   ├── use-enter-submit.js       # Submit on Enter key
+│   ├── use-focus-on-slash-press.js
+│   └── use-is-at-bottom.js
+└── lib/
+    ├── getAssistantResponse.js   # Fetch helper (legacy, unused in current flow)
+    ├── generateUniqueId.js
+    └── utils.js                  # cn() class merge helper
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Data flow:**
+1. User types a message → `useChat` hook (Vercel AI SDK) POSTs to `/api`
+2. API route calls the selected LLM via `streamText`, returns a streaming `Response`
+3. `useChat` consumes the stream and appends tokens to the `messages` array in real time
+4. `ChatList` renders the growing message list as tokens arrive
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 14 (App Router) |
+| Language | JavaScript (JSX) |
+| AI SDK | [Vercel AI SDK](https://sdk.vercel.ai) (`ai` v4) |
+| LLM Providers | Google Gemini (`@ai-sdk/google`), OpenAI (`@ai-sdk/openai`), Azure OpenAI (`@ai-sdk/azure`) |
+| Azure Auth | Entra ID via `DefaultAzureCredential` (`@azure/identity`) — no API key required |
+| Default Model | `gemini-2.5-flash` |
+| UI Components | shadcn/ui (Radix UI primitives) |
+| Styling | Tailwind CSS v3 |
+| Icons | Lucide React |
 
-## Learn More
+## Setup
 
-To learn more about Next.js, take a look at the following resources:
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Set environment variables:
+   ```bash
+   GEMINI_API_KEY=your_gemini_key
+   OPENAI_API_KEY=your_openai_key
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+   # Azure OpenAI (Entra ID — no API key needed)
+   AZURE_RESOURCE_NAME=your-azure-resource-name   # e.g. "my-openai"
+   ```
 
-## Deploy on Vercel
+3. For Azure OpenAI, authenticate via Entra ID:
+   ```bash
+   # Local dev
+   az login
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   # Production: use managed identity or service principal (picked up automatically)
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+4. Run the dev server:
+   ```bash
+   npm run dev
+   ```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Supported Providers & Models
+
+| Provider | Models |
+|---|---|
+| Google AI | `gemini-2.5-flash` |
+| OpenAI | `gpt-3.5-turbo`, `gpt-4` |
+| Azure OpenAI | `gpt-5.4` (Entra ID auth, no API key) |
+
+The provider and model can be switched at runtime via the dropdowns in the chat UI.
