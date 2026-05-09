@@ -1,36 +1,109 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# chat-rsc
 
-## Getting Started
+A streaming AI chat application built with Next.js and the Vercel AI SDK, demonstrating the **React Server Components (RSC)** pattern for LLM streaming. Supports multiple LLM providers switchable at runtime.
 
-First, run the development server:
+## Architecture
+
+The key architectural choice is using `ai/rsc` (Server Actions + streamable values) instead of a traditional REST API route:
+
+```
+Client Component (page.js)
+  │
+  │  calls server action directly (no fetch/API route)
+  ▼
+Server Action (actions.jsx)  ←── 'use server'
+  │
+  ├── Azure OpenAI  →  AzureOpenAI client (openai pkg) + Entra ID auth
+  │                    streams via chat.completions.create({ stream: true })
+  │
+  └── OpenAI / Gemini  →  Vercel AI SDK streamText()
+                           streams via createStreamableValue()
+  │
+  ▼
+createStreamableValue()  →  serialized over network  →  readStreamableValue() on client
+```
+
+The client calls server functions as if they were local async functions — no REST endpoint is exposed. The stream is serialized across the server/client boundary using RSC primitives.
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 14 (App Router) |
+| Runtime | React 18, Node.js |
+| AI Orchestration | Vercel AI SDK v4 (`ai`, `ai/rsc`) |
+| LLM — OpenAI | `@ai-sdk/openai` |
+| LLM — Google Gemini | `@ai-sdk/google` |
+| LLM — Azure OpenAI | `openai` SDK + `@azure/identity` (Entra ID) |
+| UI Components | shadcn/ui (Radix UI primitives) |
+| Styling | Tailwind CSS v3 |
+| Icons | Lucide React |
+
+## Supported Providers & Models
+
+| Provider | Model |
+|---|---|
+| OpenAI | `gpt-3.5-turbo`, `gpt-4` |
+| Google AI | `gemini-2.5-flash` |
+| Azure OpenAI | `gpt-5.4` |
+
+Provider and model are switchable via dropdowns in the UI at runtime.
+
+## Project Structure
+
+```
+src/
+├── app/(chat)/
+│   ├── actions.jsx     # Server Action — streams LLM responses (RSC core)
+│   ├── page.js         # Chat UI — client component
+│   ├── utils.js        # Provider/model resolution, client instantiation
+│   └── layout.js
+├── components/
+│   ├── chat/           # ChatBubble, ChatList, loading skeleton
+│   └── ui/             # shadcn primitives (button, textarea, dropdown, etc.)
+└── hooks/
+    ├── use-enter-submit.js         # Submit on Enter key
+    ├── use-focus-on-slash-press.js # Focus input on / key
+    └── use-is-at-bottom.js         # Scroll detection
+```
+
+## Setup
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure environment variables
+
+Copy `.env.local` and fill in values:
+
+```env
+OPENAI_API_KEY=sk-...
+GEMINI_API_KEY=...
+
+# Azure OpenAI (Entra ID auth — no API key needed)
+AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com/
+AZURE_OPENAI_DEPLOYMENT=gpt-5.4
+AZURE_OPENAI_API_VERSION=2024-12-01-preview
+```
+
+### 3. Azure Entra ID authentication
+
+Azure OpenAI uses `DefaultAzureCredential` — no API key required.
+
+**Local development:**
+```bash
+az login
+```
+
+**Production:** attach a managed identity or service principal to your deployment. No code changes needed.
+
+### 4. Run
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Open [http://localhost:3000](http://localhost:3000).
