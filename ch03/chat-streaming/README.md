@@ -46,7 +46,7 @@ src/
 | Framework | Next.js 14 (App Router) |
 | Language | JavaScript (JSX) |
 | AI SDK | [Vercel AI SDK](https://sdk.vercel.ai) (`ai` v4) |
-| LLM Providers | Google Gemini (`@ai-sdk/google`), OpenAI (`@ai-sdk/openai`), Azure OpenAI (`@ai-sdk/azure`) |
+| LLM Providers | Google Gemini (`@ai-sdk/google`), OpenAI (`@ai-sdk/openai`), Azure OpenAI (`openai` SDK) |
 | Azure Auth | Entra ID via `DefaultAzureCredential` (`@azure/identity`) — no API key required |
 | Default Model | `gemini-2.5-flash` |
 | UI Components | shadcn/ui (Radix UI primitives) |
@@ -60,13 +60,14 @@ src/
    npm install
    ```
 
-2. Set environment variables:
+2. Set environment variables in `.env.local`:
    ```bash
    GEMINI_API_KEY=your_gemini_key
    OPENAI_API_KEY=your_openai_key
 
    # Azure OpenAI (Entra ID — no API key needed)
-   AZURE_RESOURCE_NAME=your-azure-resource-name   # e.g. "my-openai"
+   AZURE_OPENAI_ENDPOINT=https://your-resource-name.openai.azure.com/
+   AZURE_OPENAI_API_VERSION=2024-12-01-preview
    ```
 
 3. For Azure OpenAI, authenticate via Entra ID:
