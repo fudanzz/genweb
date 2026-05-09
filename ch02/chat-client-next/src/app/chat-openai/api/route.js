@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,5 +30,5 @@ export async function POST(req) {
     role: 'assistant',
     content: completion.choices[0].message.content,
   };
-  return Response.json({ message });
+  return NextResponse.json({ message });
 }

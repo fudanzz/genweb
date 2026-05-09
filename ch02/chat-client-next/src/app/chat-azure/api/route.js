@@ -1,5 +1,6 @@
 import { AzureOpenAI } from 'openai';
 import { DefaultAzureCredential, getBearerTokenProvider } from '@azure/identity';
+import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,5 +39,5 @@ export async function POST(req) {
     content: completion.choices[0].message.content,
   };
 
-  return Response.json({ message });
+  return NextResponse.json({ message });
 }

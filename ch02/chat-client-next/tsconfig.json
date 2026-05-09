@@ -18,23 +18,25 @@
     "incremental": true,
     "module": "esnext",
     "esModuleInterop": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "plugins": [
       {
         "name": "next"
       }
     ],
-    "target": "ES2017"
+    "target": "ES2017",
+    "types": ["node"]
   },
   "include": [
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx",
-    "src/app/lib/utils.js"
+    "src/app/lib/utils.js",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
