@@ -1,4 +1,5 @@
 import { createOpenAI } from '@ai-sdk/openai';
+import { createAzure } from '@ai-sdk/azure';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 
 const supportedProviders = {
@@ -10,6 +11,9 @@ const supportedProviders = {
     constructor: createGoogleGenerativeAI,
     models: ['models/gemini-2.5-flash'],
   },
+  azure: {
+    models: ['gpt-5.4'],
+  },
 };
 
 export function getSupportedModel(provider, model) {
@@ -19,10 +23,20 @@ export function getSupportedModel(provider, model) {
     throw new Error(`Unsupported provider: ${provider}. Please check your configuration.`);
   }
 
-  const { constructor, models } = providerConfig;
-
-  if (!models.includes(model)) {
+  if (!providerConfig.models.includes(model)) {
     throw new Error(`Unsupported model: ${model} for provider: ${provider}. Please choose a supported model.`);
+  }
+
+  if (provider === 'azure') {
+    const { DefaultAzureCredential, getBearerTokenProvider } = require('@azure/identity');
+    const credential = new DefaultAzureCredential();
+    const azureADTokenProvider = getBearerTokenProvider(credential, 'https://cognitiveservices.azure.com/.default');
+    const azure = createAzure({
+      resourceName: process.env.AZURE_RESOURCE_NAME,
+      apiVersion: process.env.AZURE_OPENAI_API_VERSION || '2024-12-01-preview',
+      azureADTokenProvider,
+    });
+    return azure(model);
   }
 
   const apiKey = process.env[`${provider.toUpperCase()}_API_KEY`];
@@ -38,7 +52,7 @@ export function getSupportedModel(provider, model) {
     );
   }
 
-  const providerInstance = constructor({ apiKey });
+  const providerInstance = providerConfig.constructor({ apiKey });
 
   return providerInstance(model);
 }
