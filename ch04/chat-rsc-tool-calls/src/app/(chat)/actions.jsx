@@ -1,6 +1,6 @@
 'use server';
 
-import { createAI, getMutableAIState, streamUI } from 'ai/rsc';
+import { createAI, getMutableAIState, streamUI } from '@ai-sdk/rsc';
 import { z } from 'zod';
 import ChatBubble from '../../components/chat/ChatBubble';
 import { WeatherCard, LoadingSpinner, fetchWeatherData } from '../../components/Weather';
@@ -13,7 +13,7 @@ function sleep(ms) {
 
 export async function continueConversation(input, provider, model) {
   'use server';
-  const supportedModel = getSupportedModel(provider, model);
+  const supportedModel = await getSupportedModel(provider, model);
   const history = getMutableAIState();
   const result = await streamUI({
     model: supportedModel,
@@ -26,13 +26,14 @@ export async function continueConversation(input, provider, model) {
     text: ({ content, done }) => {
       if (done) {
         history.done([...history.get(), { role: 'assistant', content }]);
+        return <ChatBubble role="assistant" text={content} className={`mr-auto border-none`} />;
       }
-      return <ChatBubble role="assistant" text={content} className={`mr-auto border-none`} />;
+      return null;
     },
     tools: {
       getWeather: {
         description: 'Get the current weather for a specific city',
-        parameters: z.object({
+        inputSchema: z.object({
           city: z.string().describe('The name of the city'),
         }),
         generate: async function* ({ city }) {
@@ -44,6 +45,7 @@ export async function continueConversation(input, provider, model) {
               city={city}
               temperature={weatherData.temperature}
               condition={weatherData.condition}
+              source={weatherData.source}
             />
           );
         },
